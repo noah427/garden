@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
 	"noah/garden/plant"
+	"noah/garden/pot"
 	"noah/garden/sprite"
 )
 
@@ -18,19 +19,37 @@ type ECS struct {
 }
 
 type Game struct {
-	Ecs *ECS
+	Plants *ECS
+	Pots   []*pot.Pot
+}
+
+func (G *Game) FindPot(x, y float64) *sprite.DropZone {
+	for _, pot := range G.Pots {
+		if pot.DropZone.InBounds(x, y) {
+			return pot.DropZone
+		}
+	}
+	return nil
 }
 
 func (G *Game) Draw(screen *ebiten.Image) {
-	for _, component := range G.Ecs.Sprites {
+	for _, component := range G.Plants.Sprites {
 		component.Draw(screen)
+	}
+
+	for _, pot := range G.Pots {
+		pot.Draw(screen)
+		pot.DropZone.DebugRect(screen)
 	}
 }
 
 func (G *Game) Update() error {
 	tps := ebiten.CurrentTPS()
-	for _, component := range G.Ecs.Sprites {
+	for _, component := range G.Plants.Sprites {
 		component.Update(tps)
+	}
+	for _, pot := range G.Pots {
+		pot.Update(tps)
 	}
 	return nil
 }
@@ -43,11 +62,19 @@ func main() {
 	basil := plant.CreatePlant("./assets/plants/basil.png", 32, 32, 0, 0, 5, "Basil")
 	basil.Draggable = true
 
-	Ecs := &ECS{
+	dp := &pot.Pot{
+		Sprite: sprite.CreateSprite("./assets/pots/defaultpot.png", 32, 32, 100, 100),
+	}
+
+	dp.CreateDropZone(0, 0, 32, 32, 0, -16)
+
+	Plants := &ECS{
 		[]sprite.AnySprite{basil},
 	}
 
-	game := Game{Ecs: Ecs}
+	game := Game{Plants: Plants, Pots: []*pot.Pot{dp}}
+
+	basil.RequestDropZone = game.FindPot
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Garden")

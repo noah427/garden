@@ -15,28 +15,35 @@ type AnySprite interface {
 }
 
 type Sprite struct {
-	Image         *ebiten.Image
-	Height, Width int
-	X, Y          float64
-	Draggable     bool
-	Dragging      bool
-	DropZone      *DropZone
+	Image           *ebiten.Image
+	Height, Width   int
+	X, Y            float64
+	Draggable       bool
+	Dragging        bool
+	DropZone        *DropZone
+	RequestDropZone RequestDropZone
 }
 
-func (S *Sprite) Update() {
+func (S *Sprite) MoveTo(x, y float64) {
+	if S.DropZone != nil {
+		S.MoveDropZone(x, y)
+	}
+	S.X = x
+	S.Y = y
+}
+
+func (S *Sprite) Update(tps float64) error {
 	S.IsClicked()
 	if S.Dragging {
 		S.Drag()
 	}
+	return nil
 }
 
 func (S *Sprite) Draw(screen *ebiten.Image) error {
 	op := &ebiten.DrawImageOptions{}
-	sx := 0
-	sy := 0
-	ex := sx + S.Width
-	ey := sy + S.Height
-	screen.DrawImage(S.Image.SubImage(image.Rect(sx, sy, ex, ey)).(*ebiten.Image), op)
+	op.GeoM.Translate(S.X, S.Y)
+	screen.DrawImage(S.Image, op)
 	return nil
 }
 
@@ -53,7 +60,7 @@ func (A *AnimeSprite) Update(tps float64) error {
 		return nil
 	}
 
-	A.Sprite.Update()
+	A.Sprite.Update(tps)
 	A.Tick = (A.Tick + 1) % int(tps)
 	if A.Tick%FPS == 0 {
 		A.Frame = (A.Frame + 1) % A.FrameCount

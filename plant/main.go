@@ -11,6 +11,7 @@ type AnimeSprite = sprite.AnimeSprite
 type Plant struct {
 	*sprite.AnimeSprite
 	Name string
+	
 }
 
 func (P *Plant) Update(tps float64)error {

@@ -6,7 +6,7 @@ import (
 )
 
 func CreateSprite(image string, height, width int, x, y float64) *Sprite {
-	img, _, _ := ebitenutil.NewImageFromFile("./assets/plants/basil.png")
+	img, _, _ := ebitenutil.NewImageFromFile(image)
 	return &Sprite{
 		Image:  img,
 		Height: height,
